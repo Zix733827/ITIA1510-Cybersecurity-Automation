@@ -20,5 +20,7 @@ print("Password length:   " + str(password_length) + " characters")
 print("Length score:      " + str(length_score) + " points")
 print("Rotation interval: " + str(rotation_interval) + " months")
 print("Rotations (3 yr):  " + str(rotation_count))
+print("----------------------------------------")
+print("NOTE: Classification requires conditionals -- coming in Week 02.")
 print("========================================")
 #Display the password audit report
