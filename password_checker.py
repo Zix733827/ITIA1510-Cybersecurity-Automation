@@ -1,14 +1,14 @@
 batch_size = 3
 count = 0
-
+#3 passwords processed for the program to batch audit
 
 total_pass = 0
 total_fail = 0
 critical_count = 0
-
+#Counters outside the loop so the totals are preserved for all checks
 
 while count < batch_size:
-
+#Loop repeats the full audit until all passwrords are processed
 
     account = input("Enter the account or system name: ")
     username = input("Enter the username: ")
@@ -62,7 +62,7 @@ while count < batch_size:
 
     if not_username == False:
         critical_count = critical_count + 1
-
+    #Tracks the results across the batch for the final summary report
 
     print("========================================")
     print("   PASSWORD AUDIT REPORT  (" + str(count + 1) + " of " + str(batch_size) + ")")
@@ -102,7 +102,7 @@ while count < batch_size:
     #The final decision depends on the combined Boolean result calculated above
 
     count = count + 1
-
+    #The count must increase so the while loop eventually reaches the batch size and stops
 
 print("========================================")
 print("   BATCH AUDIT SUMMARY")
@@ -114,3 +114,4 @@ print("Critical flags:    " + str(critical_count))
 print("----------------------------------------")
 print("NOTE: Input is still hardcoded -- file reading coming in Week 08.")
 print("========================================")
+#The summary runs after the loop so all the totals are relected in the batch
