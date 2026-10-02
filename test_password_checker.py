@@ -1,4 +1,6 @@
-from password_checker import check_length, check_digit, check_username, check_rotation, check_breach, known_breached
+from password_checker import (check_length, check_digit, check_username, check_rotation,
+                              check_breach, load_credentials, load_breached, write_report)
+known_breached = load_breached("breached.txt")
 #Imports the functions to be tested from the password_checker.py file.
 
 length_ok, length_verdict = check_length("test")
@@ -51,5 +53,37 @@ assert not_breached == True
 print("PASS: check_breach correctly returned True for a non-breached password")
 #A password not in the breach list should return True because it is not known to be compromised.
 
+credentials = load_credentials("credentials.txt")
+if isinstance(credentials, list):
+    print("PASS: load_credentials returned a list")
+else:
+    print("FAIL: load_credentials did not return a list")
+# Test load_credentials() returns a list.
+
+if "account" in credentials[0]:
+    print("PASS: first credential contains an account key")
+else:
+    print("FAIL: first credential does not contain an account key")
+# Test the first credential contains the account key.
+
+breached = load_breached("breached.txt")
+assert isinstance(breached, list)
+print("PASS: load_breached returned a list")
+# Test load_breached() returns a list.
+
+assert "password123" in breached
+print("PASS: password123 was found in breached list")
+# Test that password123 was loaded from breached.txt.
+
+test_lines = ["Test line 1", "Test line 2"]
+write_report(test_lines, "test_report.txt")
+
+with open("test_report.txt", "r") as f:
+    test_text = f.read()
+
+assert test_text == "Test line 1\nTest line 2\n"
+print("PASS: write_report wrote the expected text")
+# Test write_report() by writing two lines and reading them back.
+
 print("----------------------------------------")
-print("All 10 tests passed.")
+print("All 15 tests passed.")
