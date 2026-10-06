@@ -1,12 +1,13 @@
-from password_checker import check_length, check_digit, check_username, check_rotation, check_breach, known_breached
+from password_checker import (check_length, check_digit, check_username,
+                              check_rotation, check_breach, known_breached, policy)
 #Imports the functions to be tested from the password_checker.py file.
 
-length_ok, length_verdict = check_length("test")
+length_ok, length_verdict = check_length("test", policy)
 assert length_ok == False
 print("PASS: check_length correctly identified weak password (length_ok = False)")
 #4-character password should return False because it does not meet the 15-character requirement.
 
-length_ok, length_verdict = check_length("abcdefghijklmnop")
+length_ok, length_verdict = check_length("abcdefghijklmnop", policy)
 assert length_ok == True
 print("PASS: check_length correctly identified strong password (length_ok = True)")
 #16-character password should return True because it meets the 15-character requirement.
@@ -31,12 +32,12 @@ assert not_username == True
 print("PASS: check_username correctly returned True when password differs from username")
 #Password that does not match the username is safe, so this test expects True.
 
-rotation_ok, rotation_verdict = check_rotation(18)
+rotation_ok, rotation_verdict = check_rotation(18, policy)
 assert rotation_ok == False
 print("PASS: check_rotation correctly returned False for 18-month interval")
 #Over the 12-month limit, so rotation_ok should be False.
 
-rotation_ok, rotation_verdict = check_rotation(6)
+rotation_ok, rotation_verdict = check_rotation(6, policy)
 assert rotation_ok == True
 print("PASS: check_rotation correctly returned True for 6-month interval")
 #Within the 12-month limit, so rotation_ok should be True.
@@ -51,5 +52,13 @@ assert not_breached == True
 print("PASS: check_breach correctly returned True for a non-breached password")
 #A password not in the breach list should return True because it is not known to be compromised.
 
+assert policy["strong_length"] == 15
+print("PASS: policy strong_length is 15")
+#Tests that the strong password length is stored correctly in the policy dictionary.
+
+assert "require_digit" in policy
+print("PASS: policy contains require_digit")
+#Tests that the required digit setting exists in the policy dictionary.
+
 print("----------------------------------------")
-print("All 10 tests passed.")
+print("All 12 tests passed.")
