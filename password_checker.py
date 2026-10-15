@@ -1,3 +1,5 @@
+import json
+
 def check_length(password):
     """Checks password length and returns length_ok and length_verdict."""
 
@@ -177,11 +179,22 @@ def write_report(report_lines, filepath):
         for line in report_lines:
             f.write(line + "\n")
 
+def save_summary(summary, filepath):
+    #Save the summary dictionary as JSON.
+    with open(filepath, "w") as f:
+        json.dump(summary, f, indent=2)
+
+
+def load_summary(filepath):
+    #Read the saved JSON file back into a dictionary.
+    with open(filepath, "r") as f:
+        return json.load(f)
+
 if __name__ == '__main__':
     credentials = load_credentials("credentials.txt")
     known_breached = load_breached("breached.txt")
     report_lines = []
-#Prevents this section from running when password_checker.py is imported by the test file.
+    #Prevents this section from running when password_checker.py is imported by the test file.
 
     failed_accounts = []
     critical_accounts = []
@@ -239,3 +252,16 @@ if __name__ == '__main__':
 
     write_report(report_lines, "report.txt")
     #Print and save the same report lines so the console and report file match.
+
+        # Build the summary dictionary using the existing audit results.
+    summary = {
+        "total": len(credentials),
+        "passed": total_pass,
+        "failed": len(failed_accounts),
+        "critical": len(critical_accounts),
+        "failed_accounts": failed_accounts,
+        "critical_accounts": critical_accounts
+    }
+
+    # Save the audit results as JSON without including passwords.
+    save_summary(summary, "audit_summary.json")

@@ -1,5 +1,5 @@
 from password_checker import (check_length, check_digit, check_username, check_rotation,
-                              check_breach, load_credentials, load_breached, write_report)
+                              check_breach, load_credentials, load_breached, write_report, save_summary, load_summary)
 known_breached = load_breached("breached.txt")
 #Imports the functions to be tested from the password_checker.py file.
 
@@ -85,5 +85,40 @@ assert test_text == "Test line 1\nTest line 2\n"
 print("PASS: write_report wrote the expected text")
 # Test write_report() by writing two lines and reading them back.
 
+# Week 09 Test 1: Save and load a JSON summary.
+sample = {
+    "total": 2,
+    "passed": 1,
+    "failed": 1,
+    "critical": 1,
+    "failed_accounts": ["Gmail"],
+    "critical_accounts": ["Gmail"]
+}
+
+save_summary(sample, "test_summary.json")
+assert load_summary("test_summary.json") == sample
+print("PASS: JSON summary saves and loads correctly")
+
+
+# Week 09 Test 2: Verify account lists remain lists.
+loaded = load_summary("test_summary.json")
+assert isinstance(loaded["failed_accounts"], list)
+print("PASS: failed_accounts remains a list")
+
+
+# Week 09 Test 3: Verify the summary contains no passwords.
+with open("credentials.txt", "r") as f:
+    credentials_lines = f.readlines()
+
+with open("audit_summary.json", "r") as f:
+    summary_text = f.read()
+
+for line in credentials_lines:
+    if line.strip():
+        password = line.strip().split(",")[2]
+        assert password not in summary_text
+
+print("PASS: JSON summary contains no passwords")
+
 print("----------------------------------------")
-print("All 15 tests passed.")
+print("All 18 tests passed.")
