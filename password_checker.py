@@ -1,4 +1,9 @@
 import json
+import os
+
+policy = {
+    "history_runs": 3
+}
 
 def check_length(password):
     """Checks password length and returns length_ok and length_verdict."""
@@ -190,6 +195,39 @@ def load_summary(filepath):
     with open(filepath, "r") as f:
         return json.load(f)
 
+def load_history(filepath):
+    """Load previous audit runs from a JSON file."""
+    #The first run has no history file, so start with an empty list.
+    if not os.path.exists(filepath):
+        return []
+
+    with open(filepath, "r") as f:
+        return json.load(f)
+
+def add_to_history(history, summary, keep):
+    """Add one audit run and keep only the newest entries."""
+
+    #Use the newest run number because trimming makes the list length unreliable.
+    if history:
+        run_number = history[-1]["run"] + 1
+    else:
+        run_number = 1
+
+    history.append({
+        "run": run_number,
+        "passed": summary["passed"],
+        "failed": summary["failed"],
+        "critical_accounts": summary["critical_accounts"]
+    })
+
+    #Trim older runs so the history does not grow without limit.
+    return history[-keep:]
+
+def save_history(history, filepath):
+    """Save the audit history as a JSON file."""
+    with open(filepath, "w") as f:
+        json.dump(history, f, indent=2)
+
 if __name__ == '__main__':
     credentials = load_credentials("credentials.txt")
     known_breached = load_breached("breached.txt")
@@ -265,3 +303,8 @@ if __name__ == '__main__':
 
     # Save the audit results as JSON without including passwords.
     save_summary(summary, "audit_summary.json")
+
+    # Load previous audits, add the current run, and save the updated history.
+    history = load_history("audit_history.json")
+    history = add_to_history(history, summary, policy["history_runs"])
+    save_history(history, "audit_history.json")
