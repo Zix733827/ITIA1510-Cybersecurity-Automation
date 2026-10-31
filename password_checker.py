@@ -139,6 +139,30 @@ def check_breach(password, known_breached):
     return not_breached
 #Checks whether a password appears in the known breach list. Takes a password and list. Returns not_breached as a Bool
 
+def breach_verdicts(username, credentials, known_breached):
+    """Return breach verdicts without exposing passwords."""
+    accounts = []
+
+    # Only include accounts belonging to the requested username.
+    for credential in credentials:
+        if credential["username"] == username:
+
+            # Reverse check_breach because True means not breached.
+            on_breach_list = not check_breach(
+                credential["password"], known_breached
+            )
+
+            # Exclude passwords to protect sensitive information.
+            accounts.append({
+                "account": credential["account"],
+                "on_breach_list": on_breach_list
+            })
+
+    return {
+        "username": username,
+        "accounts": accounts
+    }
+
 def load_breached(filepath):
     """Read the breached password file. Returns a list of password strings."""
     known_breached = []
@@ -308,3 +332,13 @@ if __name__ == '__main__':
     history = load_history("audit_history.json")
     history = add_to_history(history, summary, policy["history_runs"])
     save_history(history, "audit_history.json")
+
+    # Generate breach verdicts for jsmith.
+    verdicts = breach_verdicts("jsmith", credentials, known_breached)
+
+    # Print the verdicts in JSON format.
+    print(json.dumps(verdicts, indent=2))
+
+    # Save the verdicts without exposing passwords.
+    with open("breach_check.json", "w") as f:
+        json.dump(verdicts, f, indent=2)

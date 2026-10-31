@@ -1,7 +1,9 @@
+import json
+
 from password_checker import (check_length, check_digit, check_username, check_rotation,
                               check_breach, load_credentials, load_breached, write_report,
                               save_summary, load_summary, load_history, add_to_history,
-                              save_history, policy)
+                              save_history, policy, breach_verdicts)
 
 known_breached = load_breached("breached.txt")
 
@@ -150,5 +152,35 @@ loaded_history = load_history("test_history.json")
 assert loaded_history == history
 print("PASS: Audit history saves and loads correctly")
 
+# Test 1: Gmail is on the breach list.
+credentials = load_credentials("credentials.txt")
+known_breached = load_breached("breached.txt")
+
+result = breach_verdicts("jsmith", credentials, known_breached)
+
+assert result["accounts"][0] == {
+    "account": "Gmail",
+    "on_breach_list": True
+}
+print("PASS: breach_verdicts marked Gmail as breached")
+
+
+# Test 2: Unknown username returns no accounts.
+result = breach_verdicts("nobody", credentials, known_breached)
+
+assert result["accounts"] == []
+print("PASS: breach_verdicts returns empty accounts for unknown user")
+
+
+# Test 3: Passwords are not exposed.
+result = breach_verdicts("jsmith", credentials, known_breached)
+result_json = json.dumps(result)
+
+for credential in credentials:
+    if credential["password"] != credential["username"]:
+        assert credential["password"] not in result_json
+
+print("PASS: breach_verdicts does not expose passwords")
+
 print("----------------------------------------")
-print("All 20 tests passed.")
+print("All 23 tests passed.")
