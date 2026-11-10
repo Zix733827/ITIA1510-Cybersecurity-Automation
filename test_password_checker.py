@@ -3,7 +3,7 @@ import json
 from password_checker import (check_length, check_digit, check_username, check_rotation,
                               check_breach, load_credentials, load_breached, write_report,
                               save_summary, load_summary, load_history, add_to_history,
-                              save_history, policy, breach_verdicts)
+                              save_history, policy, breach_verdicts, length_verdicts, rotation_verdicts, run_check)
 
 known_breached = load_breached("breached.txt")
 
@@ -182,5 +182,38 @@ for credential in credentials:
 
 print("PASS: breach_verdicts does not expose passwords")
 
+# Week 12 Test 1: VPN password meets the length requirement.
+result = length_verdicts("jsmith", credentials, known_breached)
+
+assert result["accounts"][2] == {
+    "account": "VPN",
+    "long_enough": True
+}
+print("PASS: length_verdicts correctly checked VPN password")
+
+# Week 12 Test 2: SSH Server exceeds the rotation limit.
+result = rotation_verdicts("jsmith", credentials, known_breached)
+
+assert result["accounts"][1] == {
+    "account": "SSH Server",
+    "rotation_months": 24,
+    "rotation_ok": False
+}
+print("PASS: rotation_verdicts correctly checked SSH Server")
+
+# Week 12 Test 3: run_check matches breach_verdicts.
+result = run_check("check_breach", "jsmith", credentials, known_breached)
+
+expected = breach_verdicts("jsmith", credentials, known_breached)
+
+assert result == expected
+print("PASS: run_check matches breach_verdicts")
+
+# Week 12 Test 4: Reject unknown check names.
+result = run_check("reset_password", "jsmith", credentials, known_breached)
+
+assert result == {"error": "unknown check"}
+print("PASS: run_check refused an unknown check name")
+
 print("----------------------------------------")
-print("All 23 tests passed.")
+print("All 27 tests passed.")
