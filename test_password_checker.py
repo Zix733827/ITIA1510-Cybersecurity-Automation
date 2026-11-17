@@ -1,11 +1,16 @@
 import json
+import os
+import password_checker
 
 from password_checker import (check_length, check_digit, check_username, check_rotation,
                               check_breach, load_credentials, load_breached, write_report,
                               save_summary, load_summary, load_history, add_to_history,
-                              save_history, policy, breach_verdicts, length_verdicts, rotation_verdicts, run_check)
+                              save_history, policy, breach_verdicts, length_verdicts, 
+                              rotation_verdicts, run_check, log_check, read_audit_log)
 
 known_breached = load_breached("breached.txt")
+#Keep test entries separate from the real audit log.
+password_checker.AUDIT_LOG = "test_audit_log.jsonl"
 
 length_ok, length_verdict = check_length("test")
 assert length_ok == False
@@ -215,5 +220,40 @@ result = run_check("reset_password", "jsmith", credentials, known_breached)
 assert result == {"error": "unknown check"}
 print("PASS: run_check refused an unknown check name")
 
+# Week 13: Start with a clean test audit log.
+if os.path.exists("test_audit_log.jsonl"):
+    os.remove("test_audit_log.jsonl")
+
+# Week 13 Test 1: Verify the required audit log keys.
+log_check("check_length", "jsmith", {"test": True}, "test_audit_log.jsonl")
+
+entries = read_audit_log("test_audit_log.jsonl")
+
+assert set(entries[0].keys()) == {"time", "check", "username", "result"}
+print("PASS: Audit log entry contains all four required keys")
+
+
+# Week 13 Test 2: Verify accepted and refused checks are logged.
+run_check("check_length", "jsmith", credentials, known_breached)
+run_check("reset_password", "jsmith", credentials, known_breached)
+
+entries = read_audit_log("test_audit_log.jsonl")
+
+assert entries[-2]["check"] == "check_length"
+assert entries[-1]["check"] == "reset_password"
+assert entries[-1]["result"] == {"error": "unknown check"}
+print("PASS: run_check logged accepted and refused checks")
+
+
+# Week 13 Test 3: Verify passwords are not exposed.
+with open("test_audit_log.jsonl", "r") as f:
+    log_text = f.read()
+
+for credential in credentials:
+    if credential["account"] != "SSH Server":
+        assert credential["password"] not in log_text
+
+print("PASS: Audit log does not expose passwords")
+
 print("----------------------------------------")
-print("All 27 tests passed.")
+print("All 30 tests passed.")
