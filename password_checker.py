@@ -1,10 +1,35 @@
 import json
 import os
+from datetime import datetime, timezone
 
 policy = {
     "history_runs": 3
 }
+AUDIT_LOG = "audit_log.jsonl"
 
+def log_check(name, username, result, log_path):
+    #UTC keeps timestamps consistent across different time zones.
+    entry = {
+        "time": datetime.now(timezone.utc).isoformat(),
+        "check": name,
+        "username": username,
+        "result": result
+    }
+
+    #Append mode adds new entries without deleting existing ones.
+    with open(log_path, "a") as f:
+        f.write(json.dumps(entry) + "\n")
+
+def read_audit_log(log_path):
+    entries = []
+
+    with open(log_path, "r") as f:
+        for line in f:
+            if line.strip() != "":
+                entries.append(json.loads(line))
+
+    return entries
+    
 def check_length(password):
     """Checks password length and returns length_ok and length_verdict."""
 
@@ -224,6 +249,9 @@ def run_check(name, username, credentials, known_breached):
         # Reject unknown names so unsupported functions cannot run.
         result = {"error": "unknown check"}
 
+    # Log here so every check, including refused names, is recorded.
+    log_check(name, username, result, AUDIT_LOG)
+
     return result
 
 def load_breached(filepath):
@@ -417,3 +445,6 @@ if __name__ == '__main__':
         # Save all check results without exposing passwords.
         with open("all_checks.json", "w") as f:
             json.dump(all_checks, f, indent=2)
+
+    entries = read_audit_log(AUDIT_LOG)
+    print(f"{AUDIT_LOG} holds {len(entries)} entries")
